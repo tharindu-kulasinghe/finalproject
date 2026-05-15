@@ -1,0 +1,262 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary-50: #f6f8fb;
+  --color-primary-100: #e9eef5;
+  --color-primary-200: #d2dceb;
+  --color-primary-300: #aebfd8;
+  --color-primary-400: #7893b9;
+  --color-primary-500: #4f6f99;
+  --color-primary-600: #35547d;
+  --color-primary-700: #2b4466;
+  --color-primary-800: #223652;
+  --color-primary-900: #1b2b42;
+
+  --color-success-50: #eef8f2;
+  --color-success-100: #d8eedf;
+  --color-success-200: #b4dec2;
+  --color-success-300: #84c69c;
+  --color-success-400: #57aa74;
+  --color-success-500: #3e8c5c;
+  --color-success-600: #2f704a;
+  --color-success-700: #275b3d;
+  --color-success-800: #214a33;
+  --color-success-900: #1b3d2b;
+
+  --color-warning-50: #fff8ea;
+  --color-warning-100: #feefcc;
+  --color-warning-200: #fddc96;
+  --color-warning-300: #f8c865;
+  --color-warning-400: #efad30;
+  --color-warning-500: #d58f16;
+  --color-warning-600: #ab700f;
+  --color-warning-700: #87580d;
+  --color-warning-800: #6f4810;
+  --color-warning-900: #5d3e10;
+
+  --color-danger-50: #fdf3f2;
+  --color-danger-100: #fce5e3;
+  --color-danger-200: #f9cac7;
+  --color-danger-300: #f3a39d;
+  --color-danger-400: #ea756b;
+  --color-danger-500: #da493e;
+  --color-danger-600: #be3429;
+  --color-danger-700: #9e2d24;
+  --color-danger-800: #842a22;
+  --color-danger-900: #6f2822;
+
+  --color-info-50: #eff6fb;
+  --color-info-100: #dbeaf6;
+  --color-info-200: #bdd9ee;
+  --color-info-300: #8ec0e3;
+  --color-info-400: #56a2d1;
+  --color-info-500: #357eb2;
+  --color-info-600: #2b6693;
+  --color-info-700: #285476;
+  --color-info-800: #264761;
+  --color-info-900: #243b52;
+
+  --color-purple-50: #f5f4fb;
+  --color-purple-100: #ece9f7;
+  --color-purple-200: #dad4ef;
+  --color-purple-300: #bfb5df;
+  --color-purple-400: #9d8bc8;
+  --color-purple-500: #7f68af;
+  --color-purple-600: #695194;
+  --color-purple-700: #58437a;
+  --color-purple-800: #4a3964;
+  --color-purple-900: #3f3254;
+
+  
+  --shadow-soft: 0 0 0 1px rgba(148, 163, 184, 0.35);
+  --shadow-soft-md: 0 0 0 1px rgba(148, 163, 184, 0.45);
+  --shadow-soft-lg: 0 0 0 1px rgba(148, 163, 184, 0.55);
+
+  --animate-fade-in: fadeIn 0.24s ease-out forwards;
+  --animate-slide-up: slideUp 0.24s ease-out forwards;
+
+  @keyframes fadeIn {
+    0% { opacity: 0; }
+    100% { opacity: 1; }
+  }
+
+  @keyframes slideUp {
+    0% { opacity: 0; transform: translateY(6px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+}
+
+:root {
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+
+*, *::before, *::after {
+  border-radius: 0 !important;
+}
+
+html, body, #root {
+  margin: 0;
+  min-height: 100%;
+}
+
+body {
+  background-color: #f3f5f8;
+  color: #111827;
+  line-height: 1.45;
+  font-size: 14px;
+}
+
+
+#root :focus,
+#root :focus-visible {
+  outline: none;
+}
+
+#officer-stamp-scanner {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: #f9fafb;
+}
+
+#officer-stamp-scanner__scan_region {
+  width: 100% !important;
+  height: 100% !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  position: relative;
+}
+
+#officer-stamp-scanner__scan_region video,
+#officer-stamp-scanner__scan_region canvas {
+  width: 100% !important;
+  height: 100% !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
+  margin: auto;
+  object-position: center;
+  object-fit: contain;
+}
+
+#officer-stamp-scanner video,
+#officer-stamp-scanner iframe video,
+#officer-stamp-scanner__scan_region video {
+  display: block !important;
+  transform: scaleX(-1) !important;
+  -webkit-transform: scaleX(-1) !important;
+}
+
+#officer-stamp-scanner video:not(:first-of-type) {
+  display: none !important;
+}
+
+#officer-stamp-scanner__scan_region video:not(:first-of-type) {
+  display: none !important;
+}
+
+#officer-stamp-scanner__scan_region canvas {
+  display: none !important;
+}
+
+#officer-stamp-scanner__dashboard {
+  display: none !important;
+}
+
+#public-stamp-scanner {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: #f9fafb;
+}
+
+#public-stamp-scanner__scan_region {
+  width: 100% !important;
+  height: 100% !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  position: relative;
+}
+
+#public-stamp-scanner__scan_region video,
+#public-stamp-scanner__scan_region canvas {
+  width: 100% !important;
+  height: 100% !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
+  margin: auto;
+  object-position: center;
+  object-fit: contain;
+}
+
+#public-stamp-scanner video,
+#public-stamp-scanner iframe video,
+#public-stamp-scanner__scan_region video {
+  display: block !important;
+  transform: scaleX(-1) !important;
+  -webkit-transform: scaleX(-1) !important;
+}
+
+#public-stamp-scanner video:not(:first-of-type) {
+  display: none !important;
+}
+
+#public-stamp-scanner__scan_region video:not(:first-of-type) {
+  display: none !important;
+}
+
+#public-stamp-scanner__scan_region canvas {
+  display: none !important;
+}
+
+#public-stamp-scanner__dashboard {
+  display: none !important;
+}
+
+
+aside[data-app-sidebar],
+aside[data-app-sidebar] * {
+  -webkit-tap-highlight-color: transparent;
+}
+
+aside[data-app-sidebar] :is(a, button):focus,
+aside[data-app-sidebar] :is(a, button):focus-visible,
+aside[data-app-sidebar] a:any-link:focus,
+aside[data-app-sidebar] a:any-link:focus-visible {
+  outline: 0 !important;
+  outline-width: 0 !important;
+  outline-style: none !important;
+  outline-offset: 0 !important;
+  box-shadow: none !important;
+}
+
+aside[data-app-sidebar] :is(a, button):focus,
+aside[data-app-sidebar] :is(a, button):focus-visible {
+  --tw-shadow: 0 0 #0000 !important;
+  --tw-ring-shadow: 0 0 #0000 !important;
+  --tw-ring-offset-shadow: 0 0 #0000 !important;
+}
+
+aside[data-app-sidebar] svg:focus,
+aside[data-app-sidebar] svg:focus-visible {
+  outline: none !important;
+}
+
+aside[data-app-sidebar] button::-moz-focus-inner {
+  border: 0;
+  padding: 0;
+}

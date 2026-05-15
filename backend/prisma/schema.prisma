@@ -1,0 +1,780 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum UserStatus {
+  PENDING
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+}
+
+enum UserRole {
+  ADMIN
+  ED_OFFICER
+  MANUFACTURER
+  LICENSE_HOLDER
+  DISTRIBUTOR
+  RETAILER
+}
+
+enum LicenseType {
+  MANUFACTURING
+  DISTRIBUTION
+  RETAIL
+  BAR
+  RESTAURANT
+  HOTEL
+  CLUB
+  WAREHOUSE
+}
+
+enum ApplicationStatus {
+  DRAFT
+  SUBMITTED
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
+  RETURNED
+}
+
+enum LicenseStatus {
+  PENDING
+  ACTIVE
+  SUSPENDED
+  REVOKED
+  EXPIRED
+  CANCELLED
+}
+
+enum BatchStatus {
+  DRAFT
+  SUBMITTED
+  VERIFIED
+  FLAGGED
+}
+
+enum DutyAssessmentStatus {
+  CALCULATED
+  PART_PAID
+  OVERDUE
+  PAID
+  WAIVED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  DECLARED
+  UNDER_VERIFICATION
+  VERIFIED
+  REJECTED
+}
+
+enum StampRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  RETURNED
+  ISSUED
+}
+
+enum TaxStampStatus {
+  GENERATED
+  ASSIGNED
+  ACTIVE
+  VOID
+  FLAGGED
+}
+
+enum DistributionOrderStatus {
+  PENDING
+  DISPATCHED
+  RECEIVED
+  REJECTED
+  CANCELLED
+}
+
+model User {
+  id           String     @id @default(cuid())
+  fullName     String
+  email        String     @unique
+  mobile       String?    @unique
+  passwordHash String
+  companyName  String?
+  nic          String?    @unique
+  address      String?
+  role         UserRole
+  status       UserStatus @default(PENDING)
+  lastLoginAt  DateTime?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  deletedAt    DateTime?
+
+  employeeNo              String?   @unique
+  position                String?
+  department              String?
+  officeName              String?
+  district                String?
+  province                String?
+  appointmentDate         DateTime?
+  employmentType         String?
+  gender                  String?
+  dateOfBirth             DateTime?
+  emergencyContactName    String?
+  emergencyContactPhone   String?
+  officialEmail           String?
+  officialPhone           String?
+  profileImage            String?
+  lastPromotionDate       DateTime?
+  notes                   String?
+
+  submittedManufacturingApps             ManufacturingApplication[]            @relation("ManufacturingAppSubmittedBy")
+  reviewedManufacturingApps              ManufacturingApplication[]            @relation("ManufacturingAppReviewedBy")
+  submittedDistributionApps              DistributionApplication[]             @relation("DistributionAppSubmittedBy")
+  reviewedDistributionApps               DistributionApplication[]             @relation("DistributionAppReviewedBy")
+  distributionApplicationLinks           DistributionApplicationManufacturer[] @relation("DistributionManufacturerUser")
+  distributionApplicationRetailerLinks   DistributionApplicationRetailer[]     @relation("DistributionRetailerUser")
+  submittedRetailApps                    RetailApplication[]                   @relation("RetailAppSubmittedBy")
+  reviewedRetailApps                     RetailApplication[]                   @relation("RetailAppReviewedBy")
+  retailApplicationLinks                 RetailApplicationDistributor[]        @relation("RetailDistributorUser")
+  licenses                               License[]                             @relation("LicenseHolder")
+  products                               Product[]                             @relation("ManufacturerProducts")
+  submittedBatches                       ProductionBatch[]                     @relation("BatchSubmittedBy")
+  verifiedBatches                        ProductionBatch[]                     @relation("BatchVerifiedBy")
+  paymentsDeclared                       Payment[]                             @relation("PaymentDeclaredBy")
+  paymentsVerified                       Payment[]                             @relation("PaymentVerifiedBy")
+  dutyAssessments                         DutyAssessment[]                      @relation("DutyCalculatedBy")
+  stampRequests                          StampRequest[]                        @relation("StampRequestedBy")
+  stampRequestsReviewed                  StampRequest[]                        @relation("StampReviewedBy")
+  verificationLogs                       VerificationLog[]
+  auditLogs                              AuditLog[]
+  sentDistributions                      DistributionOrder[]                   @relation("DistributionSentBy")
+  receivedDistributions                  DistributionOrder[]                   @relation("DistributionReceivedBy")
+  distributorStocks                      DistributorStock[]
+  notifications                          Notification[]
+
+  @@index([role])
+  @@index([status])
+  @@index([companyName])
+  @@index([employeeNo])
+  @@index([position])
+  @@index([officeName])
+  @@index([district])
+}
+
+model ManufacturingApplication {
+  id                       String             @id @default(cuid())
+  applicationNo            String             @unique
+  applicantName            String
+  applicantEmail           String
+  applicantPhone           String?
+  companyName              String
+  companyRegistrationNo    String?
+  taxIdentificationNo      String?
+  businessAddress          String
+  district                 String
+  province                 String
+  premisesOwnershipType    String
+  deedOrLeaseReference     String?
+  productType              String
+  proposedProductsJson     String?
+  manufacturingType      String
+  rawMaterialDetails       String?
+  productionCapacity       String?
+  environmentalApprovalRef String?
+  fireSafetyApprovalRef    String?
+  otherGovernmentApprovals String?
+  remarks                  String?
+  status                   ApplicationStatus  @default(DRAFT)
+  submittedAt              DateTime?
+  reviewedAt               DateTime?
+  createdAt                DateTime           @default(now())
+  updatedAt                DateTime           @updatedAt
+
+  submittedById String?
+  submittedBy   User?   @relation("ManufacturingAppSubmittedBy", fields: [submittedById], references: [id], onDelete: SetNull)
+
+  reviewedById String?
+  reviewedBy   User?   @relation("ManufacturingAppReviewedBy", fields: [reviewedById], references: [id], onDelete: SetNull)
+
+  issuedLicense License?
+  files         ApplicationFile[]
+
+  @@index([submittedById])
+  @@index([reviewedById])
+  @@index([status])
+}
+
+model DistributionApplication {
+  id                      String             @id @default(cuid())
+  applicationNo           String             @unique
+  applicantName           String
+  applicantEmail          String
+  applicantPhone          String?
+  businessName            String
+  businessRegistrationNo  String?
+  taxIdentificationNo     String?
+  warehouseAddress        String
+  district                String
+  province                String
+  premisesOwnershipType   String
+  deedOrLeaseReference   String?
+  buildingPlanReference   String?
+  packingListDetails      String?
+  oicCertificationRef     String?
+  warehouseCapacity       String?
+  transportDetails        String?
+  distributionScope       String?
+  remarks                 String?
+  status                  ApplicationStatus  @default(DRAFT)
+  submittedAt             DateTime?
+  reviewedAt              DateTime?
+  createdAt               DateTime           @default(now())
+  updatedAt               DateTime           @updatedAt
+
+  submittedById String?
+  submittedBy   User?   @relation("DistributionAppSubmittedBy", fields: [submittedById], references: [id], onDelete: SetNull)
+
+  reviewedById String?
+  reviewedBy   User?   @relation("DistributionAppReviewedBy", fields: [reviewedById], references: [id], onDelete: SetNull)
+
+  selectedManufacturers DistributionApplicationManufacturer[]
+  selectedRetailers     DistributionApplicationRetailer[]
+
+  issuedLicense License?
+  files         ApplicationFile[]
+
+  @@index([submittedById])
+  @@index([reviewedById])
+  @@index([status])
+}
+
+model DistributionApplicationManufacturer {
+  id String @id @default(cuid())
+
+  distributionApplicationId String
+  manufacturerId            String
+
+  distributionApplication DistributionApplication @relation(fields: [distributionApplicationId], references: [id], onDelete: Cascade)
+  manufacturer            User                    @relation("DistributionManufacturerUser", fields: [manufacturerId], references: [id], onDelete: Restrict)
+
+  @@unique([distributionApplicationId, manufacturerId])
+  @@index([distributionApplicationId])
+  @@index([manufacturerId])
+}
+
+model DistributionApplicationRetailer {
+  id String @id @default(cuid())
+
+  distributionApplicationId String
+  retailerId                String
+
+  distributionApplication DistributionApplication @relation(fields: [distributionApplicationId], references: [id], onDelete: Cascade)
+  retailer                User                    @relation("DistributionRetailerUser", fields: [retailerId], references: [id], onDelete: Restrict)
+
+  @@unique([distributionApplicationId, retailerId])
+  @@index([distributionApplicationId])
+  @@index([retailerId])
+}
+
+model RetailApplication {
+  id                         String             @id @default(cuid())
+  applicationNo              String             @unique
+  applicantName              String
+  applicantEmail             String
+  applicantPhone             String?
+  businessName               String
+  businessAddress            String
+  district                   String
+  province                   String
+  outletType                 String
+  taxIdentificationNo      String?
+  premisesOwnershipType      String
+  deedOrLeaseReference       String?
+  touristBoardApprovalRef    String?
+  filmCorporationApprovalRef String?
+  clubApprovalRef            String?
+  tradeLicenseRef            String?
+  liquorSaleMode             String?
+  seatingCapacity            String?
+  remarks                    String?
+  status                     ApplicationStatus  @default(DRAFT)
+  submittedAt                DateTime?
+  reviewedAt                 DateTime?
+  createdAt                  DateTime           @default(now())
+  updatedAt                  DateTime           @updatedAt
+
+  submittedById String?
+  submittedBy   User?   @relation("RetailAppSubmittedBy", fields: [submittedById], references: [id], onDelete: SetNull)
+
+  reviewedById String?
+  reviewedBy   User?   @relation("RetailAppReviewedBy", fields: [reviewedById], references: [id], onDelete: SetNull)
+
+  selectedDistributors RetailApplicationDistributor[]
+
+  issuedLicense License?
+  files         ApplicationFile[]
+
+  @@index([submittedById])
+  @@index([reviewedById])
+  @@index([status])
+}
+
+model RetailApplicationDistributor {
+  id String @id @default(cuid())
+
+  retailApplicationId String
+  distributorId       String
+
+  retailApplication RetailApplication @relation(fields: [retailApplicationId], references: [id], onDelete: Cascade)
+  distributor       User              @relation("RetailDistributorUser", fields: [distributorId], references: [id], onDelete: Restrict)
+
+  @@unique([retailApplicationId, distributorId])
+  @@index([retailApplicationId])
+  @@index([distributorId])
+}
+
+model ApplicationFile {
+  id        String   @id @default(cuid())
+  fileName  String
+  fileUrl   String
+  fileType  String
+  fileSize  Int
+  category  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  manufacturingApplicationId String?
+  manufacturingApplication   ManufacturingApplication? @relation(fields: [manufacturingApplicationId], references: [id], onDelete: Cascade)
+
+  distributionApplicationId String?
+  distributionApplication   DistributionApplication? @relation(fields: [distributionApplicationId], references: [id], onDelete: Cascade)
+
+  retailApplicationId String?
+  retailApplication   RetailApplication? @relation(fields: [retailApplicationId], references: [id], onDelete: Cascade)
+
+  @@index([manufacturingApplicationId])
+  @@index([distributionApplicationId])
+  @@index([retailApplicationId])
+  @@index([category])
+}
+
+model License {
+  id                  String         @id @default(cuid())
+  licenseNumber       String         @unique
+  type                LicenseType
+  status              LicenseStatus  @default(PENDING)
+  companyName         String
+  businessAddress     String
+  taxIdentificationNo String?
+  issueDate           DateTime?
+  effectiveFrom       DateTime?
+  effectiveTo         DateTime?
+  renewalDueDate      DateTime?
+  suspendedAt         DateTime?
+  revokedAt           DateTime?
+  cancelledAt         DateTime?
+  remarks             String?
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
+
+  manufacturingApplicationId String?                   @unique
+  manufacturingApplication   ManufacturingApplication? @relation(fields: [manufacturingApplicationId], references: [id], onDelete: SetNull)
+
+  distributionApplicationId String?                  @unique
+  distributionApplication   DistributionApplication? @relation(fields: [distributionApplicationId], references: [id], onDelete: SetNull)
+
+  retailApplicationId String?            @unique
+  retailApplication   RetailApplication? @relation(fields: [retailApplicationId], references: [id], onDelete: SetNull)
+
+  holderId String
+  holder   User   @relation("LicenseHolder", fields: [holderId], references: [id], onDelete: Cascade)
+
+  product                    Product?
+  batches                    ProductionBatch[]
+  dutyAssessments            DutyAssessment[]
+  payments                   Payment[]
+  stampRequests              StampRequest[]
+  sentDistributionOrders     DistributionOrder[] @relation("DistributionSentByLicense")
+  receivedDistributionOrders DistributionOrder[] @relation("DistributionReceivedByLicense")
+
+  @@index([holderId])
+  @@index([status])
+  @@index([type])
+  @@index([effectiveTo, status])
+}
+
+model Product {
+  id              String   @id @default(cuid())
+  code            String   @unique
+  name            String
+  category        String
+  packType        String?
+  packSizeMl      Int?
+  alcoholStrength Float?
+  description     String?
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  manufacturerId String
+  manufacturer   User   @relation("ManufacturerProducts", fields: [manufacturerId], references: [id], onDelete: Cascade)
+
+  licenseId String  @unique
+  license   License @relation(fields: [licenseId], references: [id], onDelete: Cascade)
+
+  batches            ProductionBatch[]
+  dutyRates          DutyRate[]
+  stampRequests      StampRequest[]
+  taxStamps          TaxStamp[]
+  distributionOrders DistributionOrder[]
+  distributorStocks  DistributorStock[]
+
+  @@index([manufacturerId])
+  @@index([licenseId])
+  @@index([category])
+}
+
+model ProductionBatch {
+  id                   String       @id @default(cuid())
+  batchNo              String       @unique
+  productionDate       DateTime
+  rawSpiritInputLiters Float?
+  outputLiters         Float?
+  unitsProduced        Int?
+  wastageLiters        Float?
+  notes                String?
+  status               BatchStatus  @default(DRAFT)
+  submittedAt          DateTime?
+  verifiedAt           DateTime?
+  createdAt            DateTime     @default(now())
+  updatedAt            DateTime     @updatedAt
+
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  licenseId String
+  license   License @relation(fields: [licenseId], references: [id], onDelete: Cascade)
+
+  submittedById String?
+  submittedBy   User?   @relation("BatchSubmittedBy", fields: [submittedById], references: [id], onDelete: SetNull)
+
+  verifiedById String?
+  verifiedBy   User?   @relation("BatchVerifiedBy", fields: [verifiedById], references: [id], onDelete: SetNull)
+
+  dutyAssessments    DutyAssessment[]
+  stampRequests       StampRequest[]
+  taxStamps           TaxStamp[]
+  verificationLogs    VerificationLog[]
+  distributionOrders  DistributionOrder[]
+
+  @@index([productId, productionDate])
+  @@index([licenseId])
+  @@index([submittedById])
+  @@index([verifiedById])
+  @@index([status])
+}
+
+model DutyRate {
+  id             String    @id @default(cuid())
+  productId      String?
+  category       String?
+  ratePerLiter   Float?
+  ratePerUnit    Float?
+  legalReference String?
+  effectiveFrom  DateTime
+  effectiveTo    DateTime?
+  isActive       Boolean   @default(true)
+  createdAt      DateTime  @default(now())
+
+  product     Product?         @relation(fields: [productId], references: [id], onDelete: SetNull)
+  assessments DutyAssessment[]
+
+  @@index([productId])
+  @@index([category])
+  @@index([effectiveFrom, effectiveTo])
+}
+
+model DutyAssessment {
+  id             String               @id @default(cuid())
+  assessmentNo   String               @unique
+  assessedAmount Float
+  paidAmount     Float                @default(0)
+  balanceAmount  Float
+  dueDate        DateTime
+  status         DutyAssessmentStatus @default(CALCULATED)
+  remarks        String?
+  calculatedAt   DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+
+  batchId String
+  batch   ProductionBatch @relation(fields: [batchId], references: [id], onDelete: Cascade)
+
+  licenseId String
+  license   License @relation(fields: [licenseId], references: [id], onDelete: Cascade)
+
+  dutyRateId String
+  dutyRate   DutyRate @relation(fields: [dutyRateId], references: [id], onDelete: Cascade)
+
+  calculatedById String?
+  calculatedBy   User?   @relation("DutyCalculatedBy", fields: [calculatedById], references: [id], onDelete: SetNull)
+
+  paymentAllocations PaymentAllocation[]
+
+  @@index([batchId])
+  @@index([licenseId])
+  @@index([dutyRateId])
+  @@index([calculatedById])
+  @@index([status, dueDate])
+}
+
+model Payment {
+  id              String         @id @default(cuid())
+  paymentRef      String         @unique
+  method          String
+  status          PaymentStatus  @default(DECLARED)
+  declaredAmount  Float
+  verifiedAmount  Float?
+  bankName        String?
+  bankBranch      String?
+  bankReference   String?
+  proofUrl        String?
+  depositedAt     DateTime?
+  declaredAt      DateTime?
+  verifiedAt      DateTime?
+  rejectionReason String?
+  remarks         String?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  licenseId String
+  license   License @relation(fields: [licenseId], references: [id], onDelete: Cascade)
+
+  declaredById String?
+  declaredBy   User?   @relation("PaymentDeclaredBy", fields: [declaredById], references: [id], onDelete: SetNull)
+
+  verifiedById String?
+  verifiedBy   User?   @relation("PaymentVerifiedBy", fields: [verifiedById], references: [id], onDelete: SetNull)
+
+  allocations PaymentAllocation[]
+
+  @@index([licenseId])
+  @@index([declaredById])
+  @@index([verifiedById])
+  @@index([status])
+  @@index([declaredAt, status])
+}
+
+model PaymentAllocation {
+  id              String   @id @default(cuid())
+  allocatedAmount Float
+  createdAt       DateTime @default(now())
+
+  paymentId String
+  payment   Payment @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+
+  dutyAssessmentId String
+  dutyAssessment   DutyAssessment @relation(fields: [dutyAssessmentId], references: [id], onDelete: Cascade)
+
+  @@unique([paymentId, dutyAssessmentId])
+  @@index([paymentId])
+  @@index([dutyAssessmentId])
+}
+
+model StampRequest {
+  id                String              @id @default(cuid())
+  requestNo         String              @unique
+  quantityRequested Int
+  quantityApproved  Int?
+  quantityIssued    Int?
+  status            StampRequestStatus  @default(PENDING)
+  reason            String?
+  requestedAt       DateTime?
+  reviewedAt        DateTime?
+  issuedAt          DateTime?
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+
+  requestedById String
+  requestedBy   User   @relation("StampRequestedBy", fields: [requestedById], references: [id], onDelete: Cascade)
+
+  reviewedById String?
+  reviewedBy   User?   @relation("StampReviewedBy", fields: [reviewedById], references: [id], onDelete: SetNull)
+
+  licenseId String
+  license   License @relation(fields: [licenseId], references: [id], onDelete: Cascade)
+
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  batchId String?
+  batch   ProductionBatch? @relation(fields: [batchId], references: [id], onDelete: SetNull)
+
+  taxStamps TaxStamp[]
+
+  @@index([requestedById])
+  @@index([reviewedById])
+  @@index([licenseId])
+  @@index([productId])
+  @@index([batchId])
+  @@index([status])
+}
+
+model TaxStamp {
+  id               String         @id @default(cuid())
+  codeValue        String         @unique
+  qrValue          String         @unique
+  cryptoHash       String         @unique
+  serialNo         String?        @unique
+  status           TaxStampStatus @default(GENERATED)
+  generatedAt      DateTime       @default(now())
+  assignedAt       DateTime?
+  activatedAt      DateTime?
+  firstVerifiedAt  DateTime?
+  lastVerifiedAt   DateTime?
+  expiresAt        DateTime?
+  suspiciousFlag   Boolean        @default(false)
+  suspiciousReason String?
+
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  batchId String?
+  batch   ProductionBatch? @relation(fields: [batchId], references: [id], onDelete: SetNull)
+
+  stampRequestId String?
+  stampRequest   StampRequest? @relation(fields: [stampRequestId], references: [id], onDelete: SetNull)
+
+  verificationLogs VerificationLog[]
+
+  @@index([productId])
+  @@index([batchId])
+  @@index([stampRequestId])
+  @@index([status])
+}
+
+model VerificationLog {
+  id              String   @id @default(cuid())
+  channel         String
+  result          String
+  scannedValue    String
+  scannedLocation String?
+  latitude        Float?
+  longitude       Float?
+  deviceInfo      String?
+  ipAddress       String?
+  remarks         String?
+  verifiedAt      DateTime @default(now())
+
+  taxStampId String?
+  taxStamp   TaxStamp? @relation(fields: [taxStampId], references: [id], onDelete: SetNull)
+
+  batchId String?
+  batch   ProductionBatch? @relation(fields: [batchId], references: [id], onDelete: SetNull)
+
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([taxStampId])
+  @@index([batchId])
+  @@index([userId])
+  @@index([result, verifiedAt])
+}
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  action      String
+  entityType  String
+  entityId    String?
+  description String?
+  oldValues   String?
+  newValues   String?
+  ipAddress   String?
+  userAgent   String?
+  occurredAt  DateTime @default(now())
+
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([action])
+  @@index([entityType, entityId])
+  @@index([occurredAt])
+}
+
+model DistributionOrder {
+  id                 String                   @id @default(cuid())
+  orderNo            String                   @unique
+  status             DistributionOrderStatus  @default(PENDING)
+  senderId           String
+  receiverId         String
+  senderLicenseId    String
+  receiverLicenseId  String
+  productId          String
+  batchId            String?
+  quantity           Int
+  unit               String
+  notes              String?
+  dispatchedAt       DateTime?
+  receivedAt         DateTime?
+  createdAt          DateTime                 @default(now())
+  updatedAt          DateTime                 @updatedAt
+
+  product Product          @relation(fields: [productId], references: [id], onDelete: Cascade)
+  batch   ProductionBatch? @relation(fields: [batchId], references: [id], onDelete: SetNull)
+
+  sender   User @relation("DistributionSentBy", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver User @relation("DistributionReceivedBy", fields: [receiverId], references: [id], onDelete: Cascade)
+
+  senderLicense   License @relation("DistributionSentByLicense", fields: [senderLicenseId], references: [id], onDelete: Cascade)
+  receiverLicense License @relation("DistributionReceivedByLicense", fields: [receiverLicenseId], references: [id], onDelete: Cascade)
+
+  @@index([senderId])
+  @@index([receiverId])
+  @@index([senderLicenseId])
+  @@index([receiverLicenseId])
+  @@index([productId])
+  @@index([batchId])
+  @@index([status])
+}
+
+model DistributorStock {
+  id                String   @id @default(cuid())
+  availableQuantity Int      @default(0)
+  reservedQuantity  Int      @default(0)
+  updatedAt         DateTime @updatedAt
+
+  distributorId String
+  distributor   User   @relation(fields: [distributorId], references: [id], onDelete: Cascade)
+
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([distributorId, productId])
+  @@index([distributorId])
+  @@index([productId])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  type      String
+  title     String
+  message   String
+  link      String?
+  isRead    Boolean  @default(false)
+  readAt    DateTime?
+  createdAt DateTime @default(now())
+
+  dedupeKey String?  @unique
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isRead, createdAt])
+  @@index([type, createdAt])
+}
